@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>主日信息分享</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", sans-serif; background: #f2f2f7; color: #1c1c1e; margin: 0; padding: 20px; }
+        .container { max-width: 600px; margin: 0 auto; }
+        h1 { text-align: center; font-size: 1.3rem; margin-bottom: 25px; color: #333; letter-spacing: 1px; }
+        .card { background: white; border-radius: 18px; padding: 0; margin-bottom: 25px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); overflow: hidden; border: 1px solid #eee; }
+        .card-image { width: 100%; height: 220px; object-fit: cover; background-color: #e5e5ea; display: block; }
+        .card-content { padding: 20px; }
+        .card h3 { margin: 0 0 8px 0; font-size: 1.2rem; font-weight: 600; }
+        .date { font-size: 0.85rem; color: #8e8e93; margin-bottom: 15px; display: block; }
+        audio { width: 100%; height: 45px; margin-top: 5px; border-radius: 25px; outline: none; }
+        .loading { text-align: center; color: #8e8e93; margin-top: 60px; font-size: 0.9rem; }
+        img[src=""], img:not([src]) { display: none; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>主日信息分享</h1>
+    <div id="list">
+        <div class="loading">正在连接...</div>
+    </div>
+</div>
+
+<script>
+    // ============================================
+    // 你的 URL 我已经帮你填好了，不需要动
+    const SUPABASE_URL = 'https://yxdkafoldwrnxyplxjky.supabase.co';
+    
+    // 请把那一长串 anon key 粘贴在下面两个单引号中间
+    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl4ZGthZm9sZHdybnh5cGx4amt5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ5NDQxNTQsImV4cCI6MjA4MDUyMDE1NH0.yvDlqVhc2RKMo7HY7jjAJGrvdZLE2tt9JVyouqtEMpE';
+    // ============================================
+
+    const { createClient } = supabase;
+    const _supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    async function fetchSermons() {
+        const listDiv = document.getElementById('list');
+        const { data, error } = await _supabase.from('sermons').select('*').order('created_at', { ascending: false });
+
+        if (error) { console.error(error); listDiv.innerHTML = `<div style="text-align:center;color:#ff3b30;margin-top:20px">暂时无法连接</div>`; return; }
+        if (!data || data.length === 0) { listDiv.innerHTML = `<div class="loading">暂时没有发布新的内容。</div>`; return; }
+
+        listDiv.innerHTML = ''; 
+        data.forEach(item => {
+            const dateStr = new Date(item.created_at).toLocaleDateString('zh-CN');
+            let imageHtml = '';
+            if (item.image_url && item.image_url.trim().length > 10) { imageHtml = `<img src="${item.image_url}" class="card-image" loading="lazy">`; }
+            const card = document.createElement('div');
+            card.className = 'card';
+            card.innerHTML = `${imageHtml}<div class="card-content"><h3>${item.title}</h3><span class="date">${dateStr}</span><audio controls controlsList="nodownload"><source src="${item.audio_url}" type="audio/mpeg">您的浏览器不支持音频播放。</audio></div>`;
+            listDiv.appendChild(card);
+        });
+    }
+    fetchSermons();
+</script>
+
+</body>
+</html>
