@@ -9,7 +9,6 @@
     <script src="https://cdn.plyr.io/3.7.8/plyr.js"></script>
     
     <style>
-        /* 全局高级灰风格 */
         body { 
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; 
             background: #f4f6f8; 
@@ -19,7 +18,6 @@
         }
         .container { max-width: 600px; margin: 0 auto; }
         
-        /* 标题 */
         h1 { 
             text-align: center; 
             font-size: 1.4rem; 
@@ -28,59 +26,55 @@
             font-weight: 700;
         }
 
-        /* 卡片设计 */
+        /* 卡片整体 */
         .card { 
             background: #ffffff; 
             border-radius: 16px; 
-            margin-bottom: 25px; 
+            margin-bottom: 30px; 
             box-shadow: 0 4px 20px rgba(0,0,0,0.06); 
             overflow: hidden; 
+            padding-bottom: 10px;
         }
         
-        /* 图片自适应完整显示 */
-        .card-image { 
+        .card-header { padding: 20px 20px 10px 20px; border-bottom: 1px solid #f0f0f0; }
+        .card h3 { margin: 0; font-size: 1.3rem; font-weight: 600; color: #2d3748; }
+        .date { font-size: 0.85rem; color: #718096; display: block; margin-top: 5px; }
+
+        /* 内容分组 (一组图+音) */
+        .content-group {
+            padding: 0;
+            border-bottom: 1px dashed #e2e8f0;
+        }
+        .content-group:last-child { border-bottom: none; }
+
+        /* 图片样式 */
+        .group-image { 
             width: 100%; 
             height: auto; 
             display: block; 
-            border-bottom: 1px solid #f0f0f0; 
         }
-
-        .card-content { padding: 24px; }
         
-        .card h3 { 
-            margin: 0 0 10px 0; 
-            font-size: 1.2rem; 
-            font-weight: 600; 
-            color: #2d3748;
+        /* 播放器容器 */
+        .audio-container {
+            padding: 15px 20px 25px 20px;
+            background: #fafbfc;
         }
 
-        .date { 
-            font-size: 0.85rem; 
-            color: #718096; 
-            margin-bottom: 20px; 
-            display: block; 
-        }
-
-        /* 音频组样式 */
-        .audio-group {
-            margin-top: 15px;
-            padding-top: 15px;
-            border-top: 1px dashed #e2e8f0;
-        }
-        .audio-group:first-of-type {
-            border-top: none; 
-            margin-top: 0; 
-            padding-top: 0;
-        }
-        .audio-label { 
-            font-size: 0.75rem; 
-            color: #a0aec0; 
-            margin-bottom: 8px; 
+        .group-label {
+            font-size: 0.8rem;
+            color: #718096;
+            margin-bottom: 8px;
             font-weight: 700;
             display: block;
+            padding-left: 20px;
+            margin-top: 15px;
         }
 
-        /* 播放器美化定制 */
+        /* 视频容器 */
+        .video-container { padding: 20px; border-bottom: 1px solid #eee; }
+        .plyr--video { border-radius: 12px; overflow: hidden; }
+
+        /* 播放器美化 */
         .plyr--audio .plyr__controls { background: transparent; color: #4a5568; }
         .plyr--full-ui input[type=range] { color: #3182ce; }
         .plyr__control--overlaid { background: #3182ce; }
@@ -94,19 +88,16 @@
 <div class="container">
     <h1>信息分享</h1>
     <div id="list">
-        <div class="loading">正在加载最新内容...</div>
+        <div class="loading">正在加载...</div>
     </div>
 </div>
 
 <script>
     // ================= 配置区 =================
-    
-    // 1. URL 我已经帮你填好了正确的
     const SUPABASE_URL = 'https://alprqqrwskvohnwjmefn.supabase.co'; 
     
-    // 2. 🔴 请把你的 Key (密钥) 粘贴在下面单引号中间 🔴
-    const SUPABASE_KEY = 'sb_publishable_H0k17oXewlgDjQoDaOMSuA_FXwVVhWm';
-
+    // 🔴 记得在这里填入你的密钥 🔴
+    const SUPABASE_KEY = 'sb_publishable_H0k17oXewlgDjQoDaOMSuA_FXwVVhWm'; 
     // =========================================
 
     const { createClient } = supabase;
@@ -117,57 +108,63 @@
         const { data, error } = await _supabase.from('sermons').select('*').order('created_at', { ascending: false });
 
         if (error) { console.error(error); listDiv.innerHTML = `<div style="text-align:center;color:red;margin-top:20px">暂时无法连接</div>`; return; }
-        if (!data || data.length === 0) { listDiv.innerHTML = `<div class="loading">暂时没有发布新的内容。</div>`; return; }
+        if (!data || data.length === 0) { listDiv.innerHTML = `<div class="loading">暂时没有内容。</div>`; return; }
 
         listDiv.innerHTML = ''; 
         
         data.forEach(item => {
             const dateStr = new Date(item.created_at).toLocaleDateString('zh-CN');
-            
-            // 图片
-            let imageHtml = '';
-            if (item.image_url && item.image_url.trim().length > 10) { 
-                imageHtml = `<img src="${item.image_url}" class="card-image" loading="lazy">`; 
-            }
+            let contentHtml = '';
 
-            // 动态生成音频列表
-            let audiosHtml = '';
-            
-            // 音频1
-            audiosHtml += `
-                <div class="audio-group">
-                    <span class="audio-label">第一部分</span>
-                    <audio class="js-player" controls><source src="${item.audio_url}" type="audio/mpeg"></audio>
-                </div>`;
-            
-            // 音频2 (如有)
-            if (item.audio_url_2 && item.audio_url_2.length > 5) {
-                audiosHtml += `
-                <div class="audio-group">
-                    <span class="audio-label">第二部分</span>
-                    <audio class="js-player" controls><source src="${item.audio_url_2}" type="audio/mpeg"></audio>
+            // 1. 视频 (如果有，放最上面)
+            if (item.video_url && item.video_url.length > 10) {
+                contentHtml += `
+                <div class="video-container">
+                    <span class="group-label" style="padding-left:0;margin-top:0;">视频观看</span>
+                    <video class="js-player" playsinline controls><source src="${item.video_url}" type="video/mp4" /></video>
                 </div>`;
             }
 
-            // 音频3 (如有)
-            if (item.audio_url_3 && item.audio_url_3.length > 5) {
-                audiosHtml += `
-                <div class="audio-group">
-                    <span class="audio-label">第三部分</span>
-                    <audio class="js-player" controls><source src="${item.audio_url_3}" type="audio/mpeg"></audio>
-                </div>`;
+            // 2. 第一组：图片1 + 音频1
+            if (item.audio_url || item.image_url) {
+                contentHtml += `<div class="content-group">`;
+                if(item.image_url) contentHtml += `<img src="${item.image_url}" class="group-image" loading="lazy">`;
+                if(item.audio_url) contentHtml += `<div class="audio-container"><span class="group-label" style="padding-left:0;margin-top:0">第一部分</span><audio class="js-player" controls><source src="${item.audio_url}" type="audio/mpeg"></audio></div>`;
+                contentHtml += `</div>`;
+            }
+
+            // 3. 第二组：图片2 + 音频2
+            if (item.audio_url_2 || item.image_url_2) {
+                contentHtml += `<div class="content-group">`;
+                if(item.image_url_2) contentHtml += `<img src="${item.image_url_2}" class="group-image" loading="lazy">`;
+                if(item.audio_url_2) contentHtml += `<div class="audio-container"><span class="group-label" style="padding-left:0;margin-top:0">第二部分</span><audio class="js-player" controls><source src="${item.audio_url_2}" type="audio/mpeg"></audio></div>`;
+                contentHtml += `</div>`;
+            }
+
+            // 4. 第三组：图片3 + 音频3
+            if (item.audio_url_3 || item.image_url_3) {
+                contentHtml += `<div class="content-group">`;
+                if(item.image_url_3) contentHtml += `<img src="${item.image_url_3}" class="group-image" loading="lazy">`;
+                if(item.audio_url_3) contentHtml += `<div class="audio-container"><span class="group-label" style="padding-left:0;margin-top:0">第三部分</span><audio class="js-player" controls><source src="${item.audio_url_3}" type="audio/mpeg"></audio></div>`;
+                contentHtml += `</div>`;
             }
 
             const card = document.createElement('div');
             card.className = 'card';
-            card.innerHTML = `${imageHtml}<div class="card-content"><h3>${item.title}</h3><span class="date">${dateStr}</span>${audiosHtml}</div>`;
+            card.innerHTML = `
+                <div class="card-header">
+                    <h3>${item.title}</h3>
+                    <span class="date">${dateStr}</span>
+                </div>
+                ${contentHtml}
+            `;
             listDiv.appendChild(card);
         });
 
-        // 启动高级播放器
+        // 启动播放器
         const players = Array.from(document.querySelectorAll('.js-player')).map(p => new Plyr(p, {
-            controls: ['play', 'progress', 'current-time', 'mute', 'volume'],
-            speed: { selected: 1, options: [1, 1.25, 1.5, 2] }
+            controls: ['play-large', 'play', 'progress', 'current-time', 'mute', 'volume', 'fullscreen'],
+            ratio: '16:9',
         }));
     }
     fetchSermons();
