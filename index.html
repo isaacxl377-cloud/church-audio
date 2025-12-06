@@ -9,109 +9,83 @@
     <script src="https://cdn.plyr.io/3.7.8/plyr.js"></script>
     
     <style>
-        /* 全局样式美化 */
+        /* 全局高级灰风格 */
         body { 
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; 
-            background: #f7f9fc; /* 极淡的蓝灰色背景 */
-            color: #2d3748; 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; 
+            background: #f4f6f8; 
+            color: #333; 
             margin: 0; 
             padding: 20px 10px; 
-            -webkit-font-smoothing: antialiased;
         }
+        .container { max-width: 600px; margin: 0 auto; }
         
-        .container { 
-            max-width: 600px; 
-            margin: 0 auto; 
-        }
-
-        /* 标题样式 */
+        /* 标题 */
         h1 { 
             text-align: center; 
-            font-size: 1.5rem; 
-            font-weight: 700; 
+            font-size: 1.4rem; 
             color: #1a202c; 
             margin: 30px 0; 
-            letter-spacing: -0.5px;
+            font-weight: 700;
         }
 
-        /* 卡片样式 - 增加高级阴影 */
+        /* 卡片设计 */
         .card { 
             background: #ffffff; 
             border-radius: 16px; 
-            margin-bottom: 30px; 
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.02); 
+            margin-bottom: 25px; 
+            box-shadow: 0 4px 20px rgba(0,0,0,0.06); 
             overflow: hidden; 
-            transition: transform 0.2s;
         }
         
-        /* 图片样式 */
+        /* 图片自适应完整显示 */
         .card-image { 
             width: 100%; 
             height: auto; 
             display: block; 
-            border-bottom: 1px solid #edf2f7; 
+            border-bottom: 1px solid #f0f0f0; 
         }
 
-        /* 内容区域 */
-        .card-content { 
-            padding: 24px; 
-        }
-
+        .card-content { padding: 24px; }
+        
         .card h3 { 
-            margin: 0 0 8px 0; 
-            font-size: 1.25rem; 
+            margin: 0 0 10px 0; 
+            font-size: 1.2rem; 
             font-weight: 600; 
-            color: #2d3748; 
-            line-height: 1.4;
+            color: #2d3748;
         }
 
         .date { 
-            font-size: 0.875rem; 
+            font-size: 0.85rem; 
             color: #718096; 
             margin-bottom: 20px; 
             display: block; 
-            font-weight: 500;
         }
 
-        /* 音频区域样式 */
+        /* 音频组样式 */
         .audio-group {
             margin-top: 15px;
             padding-top: 15px;
             border-top: 1px dashed #e2e8f0;
         }
         .audio-group:first-of-type {
-            border-top: none;
+            border-top: none; 
+            margin-top: 0; 
             padding-top: 0;
-            margin-top: 0;
         }
         .audio-label { 
             font-size: 0.75rem; 
-            color: #718096; 
+            color: #a0aec0; 
             margin-bottom: 8px; 
-            text-transform: uppercase; 
-            letter-spacing: 0.5px; 
             font-weight: 700;
             display: block;
         }
 
-        /* 自定义 Plyr 播放器的主色调 (设为深蓝色) */
-        .plyr--audio .plyr__controls {
-            background: transparent;
-            color: #4a5568;
-        }
-        .plyr--full-ui input[type=range] {
-            color: #3182ce;
-        }
-        .plyr__control--overlaid {
-            background: #3182ce;
-        }
-        .plyr--audio .plyr__control.plyr__tab-focus, 
-        .plyr--audio .plyr__control:hover, 
-        .plyr--audio .plyr__control[aria-expanded=true] {
-            background: #3182ce;
-        }
-
-        .loading { text-align: center; color: #a0aec0; margin-top: 80px; font-weight: 500; }
+        /* 播放器美化定制 */
+        .plyr--audio .plyr__controls { background: transparent; color: #4a5568; }
+        .plyr--full-ui input[type=range] { color: #3182ce; }
+        .plyr__control--overlaid { background: #3182ce; }
+        
+        .loading { text-align: center; color: #a0aec0; margin-top: 60px; }
         img[src=""], img:not([src]) { display: none; }
     </style>
 </head>
@@ -120,17 +94,17 @@
 <div class="container">
     <h1>信息分享</h1>
     <div id="list">
-        <div class="loading">正在加载精彩内容...</div>
+        <div class="loading">正在加载最新内容...</div>
     </div>
 </div>
 
 <script>
     // ================= 配置区 =================
     
-    // 1. 我已经帮你填好了之前截图里的正确地址，不要动它
+    // 1. URL 我已经帮你填好了正确的
     const SUPABASE_URL = 'https://alprqqrwskvohnwjmefn.supabase.co'; 
     
-    // 2. 🔴 请把你的 Key (密钥) 粘贴在下面两个单引号中间 🔴
+    // 2. 🔴 请把你的 Key (密钥) 粘贴在下面单引号中间 🔴
     const SUPABASE_KEY = 'sb_publishable_H0k17oXewlgDjQoDaOMSuA_FXwVVhWm';
 
     // =========================================
@@ -142,12 +116,12 @@
         const listDiv = document.getElementById('list');
         const { data, error } = await _supabase.from('sermons').select('*').order('created_at', { ascending: false });
 
-        if (error) { console.error(error); listDiv.innerHTML = `<div style="text-align:center;color:#e53e3e;margin-top:20px">暂时无法连接</div>`; return; }
+        if (error) { console.error(error); listDiv.innerHTML = `<div style="text-align:center;color:red;margin-top:20px">暂时无法连接</div>`; return; }
         if (!data || data.length === 0) { listDiv.innerHTML = `<div class="loading">暂时没有发布新的内容。</div>`; return; }
 
         listDiv.innerHTML = ''; 
         
-        data.forEach((item, index) => {
+        data.forEach(item => {
             const dateStr = new Date(item.created_at).toLocaleDateString('zh-CN');
             
             // 图片
@@ -156,37 +130,31 @@
                 imageHtml = `<img src="${item.image_url}" class="card-image" loading="lazy">`; 
             }
 
-            // 构建多个音频 HTML，每个都加上 'js-player' 类名
+            // 动态生成音频列表
             let audiosHtml = '';
             
-            // 第1个音频
+            // 音频1
             audiosHtml += `
                 <div class="audio-group">
                     <span class="audio-label">第一部分</span>
-                    <audio class="js-player" controls>
-                        <source src="${item.audio_url}" type="audio/mpeg">
-                    </audio>
+                    <audio class="js-player" controls><source src="${item.audio_url}" type="audio/mpeg"></audio>
                 </div>`;
             
-            // 第2个音频
+            // 音频2 (如有)
             if (item.audio_url_2 && item.audio_url_2.length > 5) {
                 audiosHtml += `
                 <div class="audio-group">
                     <span class="audio-label">第二部分</span>
-                    <audio class="js-player" controls>
-                        <source src="${item.audio_url_2}" type="audio/mpeg">
-                    </audio>
+                    <audio class="js-player" controls><source src="${item.audio_url_2}" type="audio/mpeg"></audio>
                 </div>`;
             }
 
-            // 第3个音频
+            // 音频3 (如有)
             if (item.audio_url_3 && item.audio_url_3.length > 5) {
                 audiosHtml += `
                 <div class="audio-group">
                     <span class="audio-label">第三部分</span>
-                    <audio class="js-player" controls>
-                        <source src="${item.audio_url_3}" type="audio/mpeg">
-                    </audio>
+                    <audio class="js-player" controls><source src="${item.audio_url_3}" type="audio/mpeg"></audio>
                 </div>`;
             }
 
@@ -196,13 +164,12 @@
             listDiv.appendChild(card);
         });
 
-        // ✅ 初始化所有的高级播放器
+        // 启动高级播放器
         const players = Array.from(document.querySelectorAll('.js-player')).map(p => new Plyr(p, {
-            controls: ['play', 'progress', 'current-time', 'mute', 'volume'], // 极简控件配置
-            speed: { selected: 1, options: [1, 1.25, 1.5, 2] } // 支持倍速播放
+            controls: ['play', 'progress', 'current-time', 'mute', 'volume'],
+            speed: { selected: 1, options: [1, 1.25, 1.5, 2] }
         }));
     }
-    
     fetchSermons();
 </script>
 
