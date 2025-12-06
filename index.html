@@ -37,14 +37,16 @@
         }
         
         .card-header { padding: 20px 20px 10px 20px; border-bottom: 1px solid #f0f0f0; }
-        ..card h3 { 
+        .card h3 { 
             margin: 0; 
             font-size: 1.3rem; 
             font-weight: 600; 
-            color: #2d3748; 
-            /* ✨ 新增这一行：让文字支持换行 ✨ */
-            white-space: pre-wrap;
-            line-height: 1.5; /* 增加一点行高，多行显示时不拥挤 */
+            color: #2d3748;
+            /* 👇 关键修改开始 */
+            white-space: pre-wrap;  /* 让文字识别回车换行 */
+            text-align: center;     /* 让文字居中显示，像歌单一样 */
+            line-height: 1.6;       /* 增加行间距，不挤在一起 */
+            /* 👆 关键修改结束 */
         }
         .date { font-size: 0.85rem; color: #718096; display: block; margin-top: 5px; }
 
