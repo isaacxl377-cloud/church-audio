@@ -2,110 +2,74 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>信息分享</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>系统诊断模式</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <link rel="stylesheet" href="https://cdn.plyr.io/3.7.8/plyr.css" />
-    <script src="https://cdn.plyr.io/3.7.8/plyr.js"></script>
-    
     <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #f7f8fa; color: #333; margin: 0; padding: 20px 12px; -webkit-tap-highlight-color: transparent; }
-        .container { max-width: 600px; margin: 0 auto; }
-        h1 { text-align: center; font-size: 1.5rem; color: #1a202c; margin: 30px 0; font-weight: 700; }
-        
-        /* 卡片样式 */
-        .card { background: #ffffff; border-radius: 16px; margin-bottom: 30px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); overflow: hidden; }
-        .card-header { padding: 24px 20px 15px 20px; border-bottom: 1px solid #f0f0f0; text-align: center; }
-        
-        /* 标题换行修复 */
-        .card h3 { margin: 0 0 10px 0; font-size: 1.25rem; font-weight: 600; color: #2d3748; white-space: pre-wrap; line-height: 1.6; }
-        
-        .date { font-size: 0.85rem; color: #718096; display: block; }
-        .content-group { padding: 0; border-bottom: 1px dashed #e2e8f0; }
-        .content-group:last-child { border-bottom: none; }
-        .group-image { width: 100%; height: auto; display: block; }
-        .audio-container { padding: 15px 20px 25px 20px; background: #fafbfc; }
-        .group-label { font-size: 0.8rem; color: #718096; margin-bottom: 8px; font-weight: 700; display: block; padding-left: 20px; margin-top: 15px; }
-        .video-container { padding: 0; border-bottom: 1px solid #eee; }
-        .plyr--video { border-radius: 0; }
-        
-        /* 播放器微调 */
-        .plyr--audio .plyr__controls { background: transparent; color: #4a5568; }
-        .plyr--full-ui input[type=range] { color: #3182ce; }
-        .loading { text-align: center; color: #a0aec0; margin-top: 60px; }
-        img[src=""], img:not([src]) { display: none; }
-        
-        /* 微信提示条 */
-        #wx-tip { display: none; background: #e6fffa; color: #2c7a7b; padding: 10px; text-align: center; font-size: 14px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #b2f5ea; }
+        body { font-family: sans-serif; padding: 20px; line-height: 1.6; }
+        .error-box { background: #fee; border: 1px solid #f00; padding: 15px; color: #c00; border-radius: 8px; word-break: break-all; }
+        .success-box { background: #efe; border: 1px solid #0a0; padding: 15px; color: #060; border-radius: 8px; }
+        button { padding: 10px 20px; font-size: 16px; background: #007bff; color: white; border: none; border-radius: 5px; margin-top: 20px; }
     </style>
 </head>
 <body>
-<div class="container">
-    <div id="wx-tip">💡 如无法播放，请点击右上角 ... 选择“在浏览器打开”</div>
-    <h1>信息分享</h1>
-    <div id="list"><div class="loading">正在加载...</div></div>
-</div>
-<script>
-    // 🔴 请在这里填入你的 URL 和 KEY 🔴
-    const SUPABASE_URL = 'https://alprqqrwskvohnwjmefn.supabase.co'; 
-    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFscHJxcXJ3c2t2b2hud2ptZWZuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ5NDUzNTUsImV4cCI6MjA4MDUyMTM1NX0.F2XF0ABt4pqF7HTw2oRjhXrgxSNOnVYp1KiBy04nrRY'; 
 
-    // 微信检测
-    if (/MicroMessenger/i.test(navigator.userAgent)) { document.getElementById('wx-tip').style.display = 'block'; }
+    <h2>🛠️ 系统连接诊断</h2>
+    <p>正在尝试连接你的数据库...</p>
+    <div id="status">检测中...</div>
 
-    const { createClient } = supabase;
-    const _supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+    <script>
+        // ==========================================
+        // 🔴 请在这里填入你的 URL 和 KEY 🔴
+        const SUPABASE_URL = 'https://alprqqrwskvohnwjmefn.supabase.co'; 
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFscHJxcXJ3c2t2b2hud2ptZWZuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ5NDUzNTUsImV4cCI6MjA4MDUyMTM1NX0.F2XF0ABt4pqF7HTw2oRjhXrgxSNOnVYp1KiBy04nrRY';  // 👈 必填！！要把 ey... 开头的长串填进来！
+        // ==========================================
 
-    async function fetchSermons() {
-        const listDiv = document.getElementById('list');
-        const { data, error } = await _supabase.from('sermons').select('*').order('created_at', { ascending: false });
+        const { createClient } = supabase;
+        const _supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
-        if (error) { console.error(error); listDiv.innerHTML = `<div style="text-align:center;color:red;margin-top:20px">暂时无法连接</div>`; return; }
-        if (!data || data.length === 0) { listDiv.innerHTML = `<div class="loading">暂时没有内容。</div>`; return; }
-
-        listDiv.innerHTML = ''; 
-        
-        data.forEach(item => {
-            const dateStr = new Date(item.created_at).toLocaleDateString('zh-CN');
-            let contentHtml = '';
-
-            // 视频
-            if (item.video_url && item.video_url.length > 10) contentHtml += `<div class="video-container"><video class="js-player" playsinline controls><source src="${item.video_url}" type="video/mp4" /></video></div>`;
+        async function testConnection() {
+            const statusDiv = document.getElementById('status');
             
-            // 第一组
-            if (item.audio_url || item.image_url) {
-                contentHtml += `<div class="content-group">`;
-                if(item.image_url) contentHtml += `<img src="${item.image_url}" class="group-image" loading="lazy">`;
-                if(item.audio_url) contentHtml += `<div class="audio-container"><span class="group-label" style="padding-left:0;margin-top:0">第一部分</span><audio class="js-player" controls><source src="${item.audio_url}" type="audio/mpeg"></audio></div>`;
-                contentHtml += `</div>`;
-            }
-            // 第二组
-            if (item.audio_url_2 || item.image_url_2) {
-                contentHtml += `<div class="content-group">`;
-                if(item.image_url_2) contentHtml += `<img src="${item.image_url_2}" class="group-image" loading="lazy">`;
-                if(item.audio_url_2) contentHtml += `<div class="audio-container"><span class="group-label" style="padding-left:0;margin-top:0">第二部分</span><audio class="js-player" controls><source src="${item.audio_url_2}" type="audio/mpeg"></audio></div>`;
-                contentHtml += `</div>`;
-            }
-            // 第三组
-            if (item.audio_url_3 || item.image_url_3) {
-                contentHtml += `<div class="content-group">`;
-                if(item.image_url_3) contentHtml += `<img src="${item.image_url_3}" class="group-image" loading="lazy">`;
-                if(item.audio_url_3) contentHtml += `<div class="audio-container"><span class="group-label" style="padding-left:0;margin-top:0">第三部分</span><audio class="js-player" controls><source src="${item.audio_url_3}" type="audio/mpeg"></audio></div>`;
-                contentHtml += `</div>`;
-            }
+            try {
+                // 1. 检查 Key 是否填了
+                if (!SUPABASE_KEY || SUPABASE_KEY.length < 10) {
+                    statusDiv.innerHTML = `<div class="error-box">❌ 错误：代码里的 SUPABASE_KEY 是空的！<br>请去 GitHub 编辑 index.html 填入密钥。</div>`;
+                    return;
+                }
 
-            const card = document.createElement('div');
-            card.className = 'card';
-            card.innerHTML = `<div class="card-header"><h3>${item.title}</h3><span class="date">${dateStr}</span></div>${contentHtml}`;
-            listDiv.appendChild(card);
-        });
+                // 2. 尝试连接数据库
+                const { data, error } = await _supabase.from('sermons').select('*').limit(1);
 
-        const players = Array.from(document.querySelectorAll('.js-player')).map(p => new Plyr(p, {
-            controls: ['play-large', 'play', 'progress', 'current-time', 'mute', 'volume', 'fullscreen'],
-            ratio: '16:9',
-        }));
-    }
-    fetchSermons();
-</script>
+                if (error) {
+                    // 🔴 打印详细错误信息
+                    statusDiv.innerHTML = `
+                        <div class="error-box">
+                            <strong>❌ 连接失败！</strong><br>
+                            <strong>错误代码 (Code):</strong> ${error.code || '无'}<br>
+                            <strong>错误信息 (Message):</strong> ${error.message}<br>
+                            <strong>建议：</strong><br>
+                            1. 如果显示 "relation not found"，说明表名错了（必须叫 sermons）。<br>
+                            2. 如果显示 "apikey invalid"，说明密钥填错了。<br>
+                            3. 如果显示 "fetch failed"，说明网络不通。
+                        </div>`;
+                } else {
+                    // 🟢 成功
+                    statusDiv.innerHTML = `
+                        <div class="success-box">
+                            <strong>✅ 连接成功！</strong><br>
+                            获取到了 ${data.length} 条数据。<br>
+                            如果数据是 0 条，请去 Supabase 插入一条测试数据。<br>
+                            <br>
+                            第一条数据标题：${data.length > 0 ? data[0].title : '无数据'}
+                        </div>`;
+                }
+            } catch (err) {
+                statusDiv.innerHTML = `<div class="error-box">❌ 程序崩溃：${err.message}</div>`;
+            }
+        }
+
+        testConnection();
+    </script>
 </body>
 </html>
